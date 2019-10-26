@@ -24,3 +24,4 @@ license, shall be dual licensed as above, without any additional terms or
 conditions.
 
 [blog]: http://adventures.michaelfbryan.com/posts/audio-processing-for-dummies/
+[wiki]: https://en.wikipedia.org/wiki/Noise_gate
