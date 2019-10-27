@@ -12,7 +12,9 @@ description = "A basic Noise Gate for recording bursts of sound above a specifie
 sample = "0.10"
 
 [dev-dependencies]
-log = "0.4.8"
-structopt = "0.3.3"
-env_logger = "0.7.1"
 hound = "3.4.0"
+criterion = "0.3"
+
+[[bench]]
+name = "throughput"
+harness = false
