@@ -1,5 +1,24 @@
+//! A basic [*Noise Gate*][wiki] algorithm.
+//!
+//! [wiki]: https://en.wikipedia.org/wiki/Noise_gate
+#![forbid(unsafe_code)]
+#![deny(
+    missing_docs,
+    missing_debug_implementations,
+    rust_2018_idioms,
+    future_incompatible,
+    bare_trait_objects,
+    elided_lifetimes_in_paths,
+    trivial_casts,
+    unreachable_pub,
+)]
+
 use sample::{Frame, Sample, SignedSample};
 
+/// A [*Noise Gate*][wiki] which can be used to split a stream of audio based
+/// on volume, skipping periods of silence.
+///
+/// [wiki]: https://en.wikipedia.org/wiki/Noise_gate
 #[derive(Debug, Clone, PartialEq)]
 pub struct NoiseGate<S> {
     /// The volume level at which the gate will open (begin recording).
@@ -35,6 +54,7 @@ impl<S> NoiseGate<S> {
 }
 
 impl<S: Sample> NoiseGate<S> {
+    /// Process a batch of frames, passing spans of noise through to a `sink`.
     pub fn process_frames<K, F>(&mut self, frames: &[F], sink: &mut K)
     where
         F: Frame<Sample = S>,
@@ -125,6 +145,7 @@ fn next_state<F: Frame>(
     }
 }
 
+/// A consumer of [`Frame`]s.
 pub trait Sink<F> {
     /// Add a frame to the current recording, starting a new recording if
     /// necessary.
