@@ -1,9 +1,12 @@
 use criterion::{
-    criterion_group, criterion_main, measurement::WallTime, BenchmarkGroup, Criterion, Throughput,
+    black_box, criterion_group, criterion_main, measurement::WallTime, BenchmarkGroup, Criterion,
+    Throughput,
 };
 use hound::WavReader;
 use noise_gate::{NoiseGate, Sink};
+use sample::{Frame, FromSample, Sample, ToSample};
 use std::fs;
+use std::path::Path;
 
 const DATA_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/data/");
 
@@ -15,20 +18,12 @@ struct Counter {
 
 impl<F> Sink<F> for Counter {
     fn record(&mut self, _: F) {
-        self.samples += 1;
+        self.samples += black_box(1);
     }
 
     fn end_of_transmission(&mut self) {
-        self.chunks += 1;
+        self.chunks += black_box(1);
     }
-}
-
-fn parse_wav(raw: &[u8]) -> Vec<[i16; 1]> {
-    WavReader::new(raw)
-        .unwrap()
-        .into_samples::<i16>()
-        .map(|s| [s.unwrap()])
-        .collect()
 }
 
 fn bench_throughput(c: &mut Criterion) {
@@ -40,24 +35,46 @@ fn bench_throughput(c: &mut Criterion) {
 
         if path.is_file() {
             let name = path.file_stem().unwrap().to_str().unwrap();
-            let data = fs::read(&path).unwrap();
-            add_benchmark(&mut group, name, &data);
+            add_benchmark(&mut group, name, &path);
         }
     }
 }
 
-fn add_benchmark(group: &mut BenchmarkGroup<WallTime>, name: &str, raw: &[u8]) {
-    let samples = parse_wav(raw);
+fn add_benchmark(group: &mut BenchmarkGroup<WallTime>, name: &str, path: &Path) {
+    let reader = WavReader::open(path).unwrap();
+
+    let desc = reader.spec();
+    assert_eq!(desc.channels, 1, "We've hard-coded frames to be [i16; 1]");
+    let release_time = 2 * desc.sample_rate as usize;
+
+    let samples = reader
+        .into_samples::<i16>()
+        .map(|s| [s.unwrap()])
+        .collect::<Vec<_>>();
+
+    let noise_threshold = average(&samples);
 
     group
         .throughput(Throughput::Elements(samples.len() as u64))
         .bench_function(name, |b| {
             b.iter(|| {
                 let mut counter = Counter::default();
-                let mut gate = NoiseGate::new(100, 44100 / 2);
+                let mut gate = NoiseGate::new(noise_threshold, release_time);
                 gate.process_frames(&samples, &mut counter);
             });
         });
+}
+
+fn average<F>(samples: &[F]) -> F::Sample
+where
+    F: Frame,
+    F::Sample: FromSample<f32>,
+    F::Sample: ToSample<f32>,
+{
+    let sum: f32 = samples.iter().fold(0.0, |sum, frame| {
+        sum + frame.channels().map(|s| s.to_sample()).sum::<f32>()
+    });
+    (sum / samples.len() as f32).round().to_sample()
 }
 
 criterion_group!(benches, bench_throughput);
