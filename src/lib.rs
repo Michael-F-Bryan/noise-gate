@@ -63,7 +63,12 @@ impl<S: Sample> NoiseGate<S> {
         for &frame in frames {
             let previously_open = self.is_open();
 
-            self.state = next_state(self.state, frame, self.open_threshold, self.release_time);
+            self.state = next_state(
+                self.state,
+                frame,
+                self.open_threshold,
+                self.release_time,
+            );
 
             if self.is_open() {
                 sink.record(frame);
@@ -80,12 +85,13 @@ where
     F: Frame,
 {
     let threshold = abs(threshold.to_signed_sample());
+    let negated_threshold =
+        F::Sample::equilibrium().to_signed_sample() - threshold;
 
     frame
         .channels()
         .map(|sample| sample.to_signed_sample())
-        .map(abs)
-        .all(|sample| sample < threshold)
+        .all(|sample| negated_threshold < sample && sample < threshold)
 }
 
 fn abs<S: SignedSample>(sample: S) -> S {
@@ -104,12 +110,15 @@ enum State {
     Closed,
 }
 
-fn next_state<F: Frame>(
+fn next_state<F>(
     state: State,
     frame: F,
     open_threshold: F::Sample,
     release_time: usize,
-) -> State {
+) -> State
+where
+    F: Frame,
+{
     match state {
         State::Open => {
             if below_threshold(frame, open_threshold) {
@@ -169,7 +178,8 @@ mod tests {
                 let expected: State = $expected;
                 let frame: [i16; 1] = [$sample];
 
-                let got = next_state(start, frame, OPEN_THRESHOLD, RELEASE_TIME);
+                let got =
+                    next_state(start, frame, OPEN_THRESHOLD, RELEASE_TIME);
 
                 assert_eq!(got, expected);
             }

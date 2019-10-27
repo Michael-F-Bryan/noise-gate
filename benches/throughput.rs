@@ -1,6 +1,6 @@
 use criterion::{
-    black_box, criterion_group, criterion_main, measurement::WallTime, BenchmarkGroup, Criterion,
-    Throughput,
+    black_box, criterion_group, criterion_main, measurement::WallTime,
+    BenchmarkGroup, Criterion, Throughput,
 };
 use hound::WavReader;
 use noise_gate::{NoiseGate, Sink};
@@ -40,7 +40,11 @@ fn bench_throughput(c: &mut Criterion) {
     }
 }
 
-fn add_benchmark(group: &mut BenchmarkGroup<WallTime>, name: &str, path: &Path) {
+fn add_benchmark(
+    group: &mut BenchmarkGroup<WallTime>,
+    name: &str,
+    path: &Path,
+) {
     let reader = WavReader::open(path).unwrap();
 
     let desc = reader.spec();

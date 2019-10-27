@@ -14,6 +14,7 @@ sample = "0.10"
 [dev-dependencies]
 hound = "3.4.0"
 criterion = "0.3"
+structopt = "0.3.3"
 
 [[bench]]
 name = "throughput"
