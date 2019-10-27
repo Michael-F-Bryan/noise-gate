@@ -11,6 +11,7 @@ pub struct NoiseGate<S> {
 }
 
 impl<S> NoiseGate<S> {
+    /// Create a new [`NoiseGate`].
     pub const fn new(open_threshold: S, release_time: usize) -> Self {
         NoiseGate {
             open_threshold,
@@ -130,4 +131,35 @@ pub trait Sink<F> {
     fn record(&mut self, frame: F);
     /// Reached the end of the samples, do necessary cleanup (e.g. flush to disk).
     fn end_of_transmission(&mut self);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const OPEN_THRESHOLD: i16 = 100;
+    const RELEASE_TIME: usize = 5;
+
+    macro_rules! test_state_transition {
+        ($name:ident: $from:expr, $sample:expr => $expected:expr) => {
+            #[test]
+            fn $name() {
+                let start: State = $from;
+                let expected: State = $expected;
+                let frame: [i16; 1] = [$sample];
+
+                let got = next_state(start, frame, OPEN_THRESHOLD, RELEASE_TIME);
+
+                assert_eq!(got, expected);
+            }
+        };
+    }
+
+    test_state_transition!(open_to_open: State::Open, 101 => State::Open);
+    test_state_transition!(open_to_closing: State::Open, 40 => State::Closing { remaining_samples: RELEASE_TIME });
+    test_state_transition!(closing_to_closed: State::Closing { remaining_samples: 0 }, 40 => State::Closed);
+    test_state_transition!(closing_to_closing: State::Closing { remaining_samples: 1 }, 40 => State::Closing { remaining_samples: 0 });
+    test_state_transition!(reopen_when_closing: State::Closing { remaining_samples: 1 }, 101 => State::Open);
+    test_state_transition!(closed_to_closed: State::Closed, 40 => State::Closed);
+    test_state_transition!(closed_to_open: State::Closed, 101 => State::Open);
 }
