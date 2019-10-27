@@ -40,7 +40,7 @@ pub struct Args {
         short = "r",
         long = "release-time",
         help = "The release time in seconds",
-        default_value = "1"
+        default_value = "0.25"
     )]
     pub release_time: f32,
     #[structopt(
