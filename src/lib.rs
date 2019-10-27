@@ -10,7 +10,7 @@
     bare_trait_objects,
     elided_lifetimes_in_paths,
     trivial_casts,
-    unreachable_pub,
+    unreachable_pub
 )]
 
 use sample::{Frame, Sample, SignedSample};
