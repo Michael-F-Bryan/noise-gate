@@ -5,26 +5,9 @@ use criterion::{
 use hound::WavReader;
 use noise_gate::{NoiseGate, Sink};
 use sample::{Frame, FromSample, Sample, ToSample};
-use std::fs;
-use std::path::Path;
+use std::{fs, path::Path};
 
 const DATA_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/data/");
-
-#[derive(Debug, Default)]
-struct Counter {
-    samples: usize,
-    chunks: usize,
-}
-
-impl<F> Sink<F> for Counter {
-    fn record(&mut self, _: F) {
-        self.samples += black_box(1);
-    }
-
-    fn end_of_transmission(&mut self) {
-        self.chunks += black_box(1);
-    }
-}
 
 fn bench_throughput(c: &mut Criterion) {
     let mut group = c.benchmark_group("throughput");
@@ -79,6 +62,18 @@ where
         sum + frame.channels().map(|s| s.to_sample()).sum::<f32>()
     });
     (sum / samples.len() as f32).round().to_sample()
+}
+
+#[derive(Debug, Default)]
+struct Counter {
+    samples: usize,
+    chunks: usize,
+}
+
+impl<F> Sink<F> for Counter {
+    fn record(&mut self, _: F) { self.samples += black_box(1); }
+
+    fn end_of_transmission(&mut self) { self.chunks += black_box(1); }
 }
 
 criterion_group!(benches, bench_throughput);

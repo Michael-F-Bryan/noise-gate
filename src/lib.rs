@@ -48,9 +48,7 @@ impl<S> NoiseGate<S> {
     }
 
     /// Is the gate currently ignoring silence?
-    pub fn is_closed(&self) -> bool {
-        !self.is_open()
-    }
+    pub fn is_closed(&self) -> bool { !self.is_open() }
 }
 
 impl<S: Sample> NoiseGate<S> {
@@ -128,7 +126,7 @@ where
             } else {
                 State::Open
             }
-        }
+        },
 
         State::Closing { remaining_samples } => {
             if below_threshold(frame, open_threshold) {
@@ -142,7 +140,7 @@ where
             } else {
                 State::Open
             }
-        }
+        },
 
         State::Closed => {
             if below_threshold(frame, open_threshold) {
@@ -150,7 +148,7 @@ where
             } else {
                 State::Open
             }
-        }
+        },
     }
 }
 
@@ -159,7 +157,8 @@ pub trait Sink<F> {
     /// Add a frame to the current recording, starting a new recording if
     /// necessary.
     fn record(&mut self, frame: F);
-    /// Reached the end of the samples, do necessary cleanup (e.g. flush to disk).
+    /// Reached the end of the samples, do necessary cleanup (e.g. flush to
+    /// disk).
     fn end_of_transmission(&mut self);
 }
 

@@ -1,10 +1,12 @@
 use hound::{WavReader, WavSpec, WavWriter};
 use noise_gate::NoiseGate;
 use sample::Frame;
-use std::error::Error;
-use std::fs::{self, File};
-use std::io::BufWriter;
-use std::path::PathBuf;
+use std::{
+    error::Error,
+    fs::{self, File},
+    io::BufWriter,
+    path::PathBuf,
+};
 use structopt::StructOpt;
 
 fn main() -> Result<(), Box<dyn Error>> {
