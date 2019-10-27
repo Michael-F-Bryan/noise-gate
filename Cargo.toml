@@ -4,7 +4,15 @@ version = "0.1.0"
 authors = ["Michael Bryan <michaelfbryan@gmail.com>"]
 edition = "2018"
 license = "MIT or Apache-2.0"
+description = "A basic Noise Gate for recording bursts of sound above a specified threshold."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+sample = "0.10"
+
+[dev-dependencies]
+log = "0.4.8"
+structopt = "0.3.3"
+env_logger = "0.7.1"
+hound = "3.4.0"
