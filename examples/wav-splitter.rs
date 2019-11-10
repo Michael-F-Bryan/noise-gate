@@ -12,8 +12,12 @@ use structopt::StructOpt;
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::from_args();
 
+    // open the WAV file
     let reader = WavReader::open(&args.input_file)?;
+    // we need the header to determine the sample rate
     let header = reader.spec();
+    // read all the samples into memory, converting them to a single-channel
+    // audio stream
     let samples = reader
         .into_samples::<i16>()
         .map(|result| result.map(|sample| [sample]))
@@ -21,10 +25,14 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let release_time = (header.sample_rate as f32 * args.release_time).round();
 
+    // make sure the output directory exists
     fs::create_dir_all(&args.output_dir)?;
+    // initialize our sink
     let mut sink = Sink::new(args.output_dir, args.prefix, header);
 
+    // set up the NoiseGate
     let mut gate = NoiseGate::new(args.noise_threshold, release_time as usize);
+    // and process all the samples
     gate.process_frames(&samples, &mut sink);
 
     Ok(())
@@ -80,6 +88,9 @@ impl Sink {
 
     fn get_writer(&mut self) -> &mut WavWriter<BufWriter<File>> {
         if self.writer.is_none() {
+            // Lazily initialize the writer. This lets us drop the writer when 
+            // sent an end_of_transmission and have it automatically start
+            // writing to a new clip when necessary.
             let filename = self
                 .output_dir
                 .join(format!("{}{}.wav", self.prefix, self.clip_number));
@@ -99,12 +110,15 @@ where
     fn record(&mut self, frame: F) {
         let writer = self.get_writer();
 
+        // write all the channels as interlaced audio
         for channel in frame.channels() {
             writer.write_sample(channel).unwrap();
         }
     }
 
     fn end_of_transmission(&mut self) {
+        // if we were previously recording a transmission, remove the writer
+        // and let it flush to disk
         if let Some(writer) = self.writer.take() {
             writer.finalize().unwrap();
         }
