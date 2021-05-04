@@ -1,6 +1,7 @@
 use hound::{WavReader, WavSpec, WavWriter};
 use noise_gate::NoiseGate;
-use sample::Frame;
+use dasp::Frame;
+
 use std::{
     error::Error,
     fs::{self, File},
