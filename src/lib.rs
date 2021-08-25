@@ -13,7 +13,9 @@
     unreachable_pub
 )]
 
-use sample::{Frame, Sample, SignedSample};
+
+use dasp::sample::SignedSample;
+use dasp::{Frame, Sample};
 
 /// A [*Noise Gate*][wiki] which can be used to split a stream of audio based
 /// on volume, skipping periods of silence.
@@ -84,7 +86,7 @@ where
 {
     let threshold = abs(threshold.to_signed_sample());
     let negated_threshold =
-        F::Sample::equilibrium().to_signed_sample() - threshold;
+        F::Sample::EQUILIBRIUM.to_signed_sample() - threshold;
 
     frame
         .channels()
@@ -93,7 +95,7 @@ where
 }
 
 fn abs<S: SignedSample>(sample: S) -> S {
-    let zero = S::equilibrium();
+    let zero = S::EQUILIBRIUM;
     if sample >= zero {
         sample
     } else {
