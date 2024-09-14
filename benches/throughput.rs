@@ -4,7 +4,7 @@ use criterion::{
 };
 use hound::WavReader;
 use noise_gate::{NoiseGate, Sink};
-use sample::{Frame, FromSample, Sample, ToSample};
+use dasp::{Frame, sample::FromSample, Sample, sample::ToSample};
 use std::{fs, path::Path};
 
 const DATA_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/data/");
